@@ -1,4 +1,23 @@
-#Schrijf een programma dat een integer getal vraagt aan de gebruiker. Jouw
-#programma geeft dan een boodschap terug met of het hier om een even of oneven
-#getal gaat. Tip: gebruik de modulus operator (%) om te bepalen of een getal even of
-#oneven is.
+import sys
+import argparse
+import config
+import management
+import check
+import report
+
+def main():
+    parser = argparse.ArgumentParser(description='Server monitoring tool')
+    parser.add_argument('--config', help='Path to configuration file', default='config.json')
+    parser.add_argument('--mode', help='Operating mode: management or check', default='check')
+    args = parser.parse_args()
+
+    config.load(args.config)
+
+    if args.mode == 'management':
+        management_menu()
+    elif args.mode == 'check':
+        check.run()
+        report.generate()
+
+if __name__ == '__main__':
+    main()
