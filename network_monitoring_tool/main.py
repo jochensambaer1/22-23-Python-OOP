@@ -1,8 +1,14 @@
+from server import Server
+import checks
+import logs
+
 import argparse
+import json
 
 from server import Server
 import checks
 import logs
+
 
 def main():
     # Parse command-line arguments
@@ -36,4 +42,9 @@ def main():
             print(server.hostname)
     elif args.check:
         for server in servers:
-            success = checks.ping
+            success = checks.ping(server.hostname)
+            if success:
+                print(f'Ping check for {server.hostname} succeeded.')
+            else:
+                print(f'Ping check for {server.hostname} failed.')
+                logs.log(server.hostname, 'Ping check failed.')
