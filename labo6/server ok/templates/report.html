@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Server Status</title>
+    <style>
+        table {
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: lightgray;
+        }
+        .up {
+            background-color: lightgreen;
+        }
+        .down {
+            background-color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Server Status</h1>
+    <table>
+        <tr>
+            <th>Server</th>
+            <th>Status</th>
+            <th>Last Check Time</th>
+            <th>Last Check Result</th>
+        </tr>
+        {% for server in servers %}
+        <tr class="{{ server.status }}">
+            <td>{{ server.description }}</td>
+            <td>{{ server.status }}</td>
+            <td>{{ server.last_check_time }}</td>
+            <td>{{ server.last_check_result }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
