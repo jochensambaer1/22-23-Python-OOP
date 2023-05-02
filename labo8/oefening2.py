@@ -17,6 +17,7 @@
     #op deze “magic method” in de theorieles later deze week). Voorbeeld:
     #https://www.delftstack.com/howto/python/__str__-vs-__repr__-in-python/
  
+# Een bolletje heeft een smaak
 class Bolletje:
     def __init__(self, smaak):
         self.smaak = smaak
@@ -24,10 +25,12 @@ class Bolletje:
     def __str__(self):
         return self.smaak
 
+# Een hoorntje heeft bolletjes
 class Hoorntje:
     def __init__(self):
         self.bolletjes = []
 
+    # Voeg bolletjes toe aan hoorntje
     def bolletjes_toevoegen(self, *nieuwe_bolletjes):
         for bol in nieuwe_bolletjes:
             self.bolletjes.append(bol)

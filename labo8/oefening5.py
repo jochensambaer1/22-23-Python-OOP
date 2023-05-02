@@ -19,14 +19,17 @@
 
 
 class IceCream:
+    # Defineer de klasse IceCream met als attribuut smaak
     def __init__(self, flavor):
         self.flavor = flavor
 
-class Cone:
+class Hoorntje:
+    # Defineer de klasse Hoorntje met als attribuut een lege lijst
     def __init__(self):
         self.scoops = []
 
     def voeg_toe(self, bolletje):
+        # Voeg bolletje toe aan lijst met bolletjes
         if len(self.bolletjes) < 3:
             self.bolletjes.append(bolletje)
         else:
@@ -34,6 +37,7 @@ class Cone:
 
 class Reuzehoorntje(Hoorntje):
     def voeg_toe(self, bolletje):
+        # Voeg bolletje toe aan lijst met bolletjes
         if len(self.bolletjes) < 5:
             self.bolletjes.append(bolletje)
         else:

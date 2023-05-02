@@ -1,6 +1,5 @@
 #Oefening 1: Bolletjes ijs
-    #In deze oefening maak je een klasse aan en noemt ze Bolletje. Bolletje
-    #vertegenwoordigt één enkel bolletje ijs
+    #In deze oefening maak je een klasse aan en noemt ze Bolletje. Bolletje vertegenwoordigt één enkel bolletje ijs
     #Elke bol heeft één enkel attribuut, smaak, een string die je kan initialiseren
     #wanneer je een instance van Bolletje initialiseert
     #Als je de klasse hebt gemaakt schrijf je een functie - maak_bolletjes - die drie
@@ -11,13 +10,13 @@
     #elke bol ijs die je hebt gemaakt af
     #Tot slot roep je deze functie aan
 
-class Bolletje:
-    def __init__(self, smaak):
-        self.smaak = smaak
+class IceCream:
+    def __init__(self, flavour):
+        self.flavour = flavour
 
-def maak_bolletjes():
-    bolletjes = [Bolletje("chocolade"), Bolletje("vanille"), Bolletje("aardbei")]
-    for bol in bolletjes:
-        print(bol.smaak)
+def make_ice_creams():
+    ice_creams = [IceCream("chocolate"), IceCream("vanilla"), IceCream("strawberry")]
+    for ice_cream in ice_creams:
+        print(ice_cream.flavour)
 
-maak_bolletjes()
+make_ice_creams()

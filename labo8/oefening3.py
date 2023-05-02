@@ -8,11 +8,14 @@
     #we het huidige aantal bolletjes vergelijken met ons eerder aangemaakte klasse
     #attribuut
 
+# Maak een class Hoorntje met een attribuut bolletjes en een methode bolletjes_toevoegen
 class Hoorntje:
+    # Initialiseer het attribuut bolletjes
     def __init__(self):
         self.bolletjes = []
         self.maximum_bolletjes = 3
         
+    # Voeg een bolletje toe aan het attribuut bolletjes
     def bolletjes_toevoegen(self, smaak):
         if len(self.bolletjes) < self.maximum_bolletjes:
             self.bolletjes.append(smaak)
@@ -20,7 +23,9 @@ class Hoorntje:
         else:
             print("Sorry, er kunnen niet meer bolletjes worden toegevoegd.")
             
+# Maak een object hoorntje van de class Hoorntje
 hoorntje = Hoorntje()
+# Voeg bolletjes toe aan de hoorntje
 hoorntje.bolletjes_toevoegen("chocolade")
 hoorntje.bolletjes_toevoegen("vanille")
 hoorntje.bolletjes_toevoegen("aardbei")
