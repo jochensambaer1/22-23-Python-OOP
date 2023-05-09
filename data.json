@@ -1,0 +1,95 @@
+{
+    "users": [
+        {
+            "name": "Alice",
+            "attended_shows": [],
+            "has_rated": []
+        },
+        {
+            "name": "Bob",
+            "attended_shows": [],
+            "has_rated": []
+        },
+        {
+            "name": "Charlie",
+            "attended_shows": [],
+            "has_rated": []
+        },
+        {
+            "name": "David",
+            "attended_shows": [],
+            "has_rated": []
+        },
+        {
+            "name": "Eve",
+            "attended_shows": [],
+            "has_rated": []
+        }
+    ],
+    "movies": [
+        {
+            "title": "The Matrix",
+            "reviews": []
+        },
+        {
+            "title": "Inception",
+            "reviews": []
+        },
+        {
+            "title": "Interstellar",
+            "reviews": []
+        },
+        {
+            "title": "The Dark Knight",
+            "reviews": []
+        },
+        {
+            "title": "Pulp Fiction",
+            "reviews": []
+        }
+    ],
+    "shows": [
+        {
+            "movie_title": "The Matrix",
+            "cinema_name": "Cineplex",
+            "show_time": "2023-06-05 10:30:00",
+            "tickets_sold": 0,
+            "attendees": [],
+            "ratings": []
+        },
+        {
+            "movie_title": "Inception",
+            "cinema_name": "Cineplex",
+            "show_time": "2023-06-05 12:30:00",
+            "tickets_sold": 0,
+            "attendees": [],
+            "ratings": []
+        },
+        {
+            "movie_title": "Interstellar",
+            "cinema_name": "AMC",
+            "show_time": "2023-06-05 14:30:00",
+            "tickets_sold": 0,
+            "attendees": [],
+            "ratings": []
+        },
+        {
+            "movie_title": "The Dark Knight",
+            "cinema_name": "AMC",
+            "show_time": "2023-06-05 16:30:00",
+            "tickets_sold": 0,
+            "attendees": [],
+            "ratings": []
+        },
+        {
+            "movie_title": "Pulp Fiction",
+            "cinema_name": "Regal",
+            "show_time": "2023-06-05 18:30:00",
+            "tickets_sold": 0,
+            "attendees": [],
+            "ratings": []
+        }
+    ],
+    "reviews": [
+        {
+            "user": 
