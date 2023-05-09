@@ -1,4 +1,4 @@
-class fietsstations {
+class Fietsstations {
   constructor(id, type, bikeType, location, street, houseNumber, addition, district, postalCode, objectCode, usage, numberOfPlaces, name, longitude, latitude) {
     this.id = id;
     this.type = type;
