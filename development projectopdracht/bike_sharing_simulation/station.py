@@ -17,7 +17,6 @@ class Fietsstations {
     this.latitude = latitude;
   }
 }
-console.log("fietsstations: " + fietsstations);
 
 let fietsstations = [];
 
@@ -40,8 +39,5 @@ for (let i = 0; i < velo.features.length; i++) {
     feature.geometry.coordinates[0],
     feature.geometry.coordinates[1]
   );
-  console.log("station: " + station);
   fietsstations.push(station);
 }
-
-console.log("fietsstations: " + fietsstations);
