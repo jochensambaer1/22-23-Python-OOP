@@ -1,43 +1,108 @@
-class Fietsstations {
-  constructor(id, type, bikeType, location, street, houseNumber, addition, district, postalCode, objectCode, usage, numberOfPlaces, name, longitude, latitude) {
-    this.id = id;
-    this.type = type;
-    this.bikeType = bikeType;
-    this.location = location;
-    this.street = street;
-    this.houseNumber = houseNumber;
-    this.addition = addition;
-    this.district = district;
-    this.postalCode = postalCode;
-    this.objectCode = objectCode;
-    this.usage = usage;
-    this.numberOfPlaces = numberOfPlaces;
-    this.name = name;
-    this.longitude = longitude;
-    this.latitude = latitude;
-  }
-}
+import geojson
+import random
+from abc import ABC, abstractmethod
 
-let fietsstations = [];
+class StationInterface(ABC):
+    @abstractmethod
+    def add_bike(self, bike):
+        pass
 
-for (let i = 0; i < velo.features.length; i++) {
-  let feature = velo.features[i];
-  let station = new Fietsstation(
-    feature.properties.OBJECTID,
-    feature.properties.Objecttype,
-    feature.properties.Type_velo,
-    feature.properties.Ligging,
-    feature.properties.Straatnaam,
-    feature.properties.Huisnummer,
-    feature.properties.Aanvulling,
-    feature.properties.District,
-    feature.properties.Postcode,
-    feature.properties.Objectcode,
-    feature.properties.Gebruik,
-    feature.properties.Aantal_plaatsen,
-    feature.properties.Naam,
-    feature.geometry.coordinates[0],
-    feature.geometry.coordinates[1]
-  );
-  fietsstations.push(station);
-}
+class Station(StationInterface):
+    def __init__(self, id, name, longitude, latitude, numberOfPlaces):
+        self.id = id
+        self.name = name
+        self.longitude = longitude
+        self.latitude = latitude
+        self.numberOfPlaces = min(numberOfPlaces, sys.maxsize) # Ensure that numberOfPlaces does not exceed the maximum size of a Python list
+        self.bikes = []
+
+    def add_bike(self, bike):
+        if len(self.bikes) < self.numberOfPlaces:
+            self.bikes.append(bike)
+            bike.location = self
+            return True
+        return False
+
+    def add_bikes(self, bikes):
+        for bike in bikes:
+            self.add_bike(bike)
+
+    @property
+    def __geo_interface__(self):
+        return {
+            'type': 'Feature',
+            'geometry': {
+                'type': 'Point',
+                'coordinates': [self.longitude, self.latitude]
+            },
+            'properties': {
+                'id': self.id,
+                'name': self.name,
+                'numberOfPlaces': self.numberOfPlaces
+            }
+        }
+
+
+# Load stations from stations.geojson file
+with open('velo.geojson') as f:
+    data = geojson.load(f)
+
+stations = []
+for feature in data['features']:
+    properties = feature['properties']
+    id = properties['OBJECTID']
+    name = properties.get('Naam', 'unknown')
+    numberOfPlaces = properties.get('Aantal_plaatsen', 0)
+    geometry = feature['geometry']
+    longitude, latitude = geometry['coordinates']
+    stations.append(Station(id, name, longitude, latitude, numberOfPlaces))
+
+# Load bikes from bikes.geojson file
+with open('bikes.geojson') as f:
+    data = geojson.load(f)
+
+bikes = [Bike(f['properties']['id']) for f in data['features']]
+
+# Assign bikes to stations
+for station in stations:
+    station.add_bikes(bikes)
+    
+class Bike:
+    def __init__(self, id):
+        self.id = id
+        self.location = None
+
+    @property
+    def __geo_interface__(self):
+        if self.location is not None:
+            return {
+                'type': 'Feature',
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [self.location.longitude, self.location.latitude]
+                },
+                'properties': {
+                    'id': self.id,
+                    'station_id': self.location.id,
+                    'station_name': self.location.name
+                }
+            }
+        else:
+            return None
+
+
+# Save stations to stations.geojson file
+features = []
+for station in stations:
+    properties = {
+        'OBJECTID': station.id,
+        'Naam': station.name,
+        'Aantal_plaatsen': station.numberOfPlaces
+    }
+    geometry = geojson.Point((station.longitude, station.latitude))
+    feature = geojson.Feature(geometry=geometry, properties=properties)
+    features.append(feature)
+
+feature_collection = geojson.FeatureCollection(features)
+with open('stations.geojson', 'w') as f:
+    geojson.dump(feature_collection, f)

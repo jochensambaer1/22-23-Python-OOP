@@ -1,6 +1,6 @@
 import argparse # Import the argparse module
 import logging # Import the logging module
-import my_module # Import the module we just created
+import   # Import the module we just created
 
 def main(): # Define the main function
     parser = argparse.ArgumentParser(description='My program') # Create a new ArgumentParser object
