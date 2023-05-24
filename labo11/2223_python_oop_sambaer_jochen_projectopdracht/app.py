@@ -20,9 +20,11 @@ def transporter():
 @app.route('/bike.html')
 def bike():
     return render_template('bike.html')
+
 @app.route('/user.html')
 def user():
     return render_template('user.html')
+
 @app.route('/station.html')
 def station():
     return render_template('station.html')

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>DataTable Example</title>
+    <title>Bikes Table</title>
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css">
 </head>
 <body>
@@ -10,7 +10,7 @@
     <p>Source code: <a href="transporter.html">transporter</a></p>   
     <p>Source code: <a href="user.html">user</a></p>   
     <p>Source code: <a href="/">index</a></p>   
-    <table id="example">
+    <table id="bikesTable">
         <thead>
             <tr>
                 <th>ID</th>
@@ -23,22 +23,9 @@
         <tbody>
         </tbody>
     </table>
-
+    
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            $('#example').DataTable({
-                "ajax": "/data",
-                "columns": [
-                    {"data": "id"},
-                    {"data": "latitude"},
-                    {"data": "longitude"},
-                    {"data": "state"},
-                    {"data": "borrow_time"}
-                ]
-            });
-        });
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>
