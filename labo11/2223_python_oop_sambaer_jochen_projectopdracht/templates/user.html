@@ -5,6 +5,20 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
+    <style>
+      table {
+          border-collapse: collapse;
+          width: 100%;
+      }
+      th, td {
+          padding: 8px;
+          text-align: left;
+          border-bottom: 1px solid #ddd;
+      }
+      th {
+          background-color: #f2f2f2;
+      }
+  </style>
   </head>
   <body>
     <nav>
@@ -21,30 +35,42 @@
     <table>
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Feature Type</th>
-          <th>Geometry Type</th>
-          <th>Latitude</th>
-          <th>Longitude</th>
           <th>ID</th>
-          <th>State</th>
-          <th>Borrow Time</th>
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>Full Name</th>
+          <th>Time Biking (Minutes)</th>
+          <th>Time Biking (Hours)</th>
+          <th>Total Time Biking (Minutes)</th>
+          <th>Saldo</th>
         </tr>
       </thead>
       <tbody>
-        {% for bike in bikes %}
-        <tr>
-          <td>{{ bike.type }}</td>
-          <td>{{ bike.feature_type }}</td>
-          <td>{{ bike.geometry_type }}</td>
-          <td>{{ bike.latitude }}</td>
-          <td>{{ bike.longitude }}</td>
-          <td>{{ bike.id }}</td>
-          <td>{{ bike.state }}</td>
-          <td>{{ bike.borrow_time }}</td>
-        </tr>
-        {% endfor %}
+        <!-- Use JavaScript to populate the table rows dynamically -->
       </tbody>
     </table>
+
+    <script>
+      fetch("name.geojson")
+        .then((response) => response.json())
+        .then((data) => {
+          const tableBody = document.querySelector("tbody");
+          data.forEach((name) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                      <td>${name.id}</td>
+                      <td>${name.first_name}</td>
+                      <td>${name.last_name}</td>
+                      <td>${name.full_name}</td>
+                      <td>${name.time_biking_minutes}</td>
+                      <td>${name.time_biking_hours}</td>
+                      <td>${name.total_time_biking_minutes}</td>
+                      <td>${name.saldo.toFixed(2)}</td>
+                  `;
+            tableBody.appendChild(row);
+          });
+        })
+        .catch((error) => console.log(error));
+    </script>
   </body>
 </html>

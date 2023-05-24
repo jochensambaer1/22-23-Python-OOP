@@ -46,6 +46,7 @@ class User:
         self.bike: Optional[Any] = None
         self.home_station = home_station
         self.work_station = work_station
+        self.ouwers_bikt =0
 
     def borrow_bike(self, bike):
         if bike.borrow(self):
