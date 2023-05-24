@@ -1,7 +1,7 @@
-import json
-import geojson
+# bike.py
 import time
 import random
+import geojson
 
 class Bike:
     def __init__(self, id, state, borrow_time=0):
@@ -39,39 +39,3 @@ class Bike:
             self.state = "maintenance" 
             return True
         return False
-
-bikes = []
-
-for i in range(100):
-    id = i + 1
-    state = "available"
-    borrow_time = random.randint(0, 3600)
-    bike = Bike(id, state, borrow_time)
-    bikes.append(bike)
-
-features = []
-
-for bike in bikes:
-    point = geojson.Point((0, 0))
-    properties = {"id": bike.id, "state": bike.state, "borrow_time": bike.borrow_time}
-    feature = geojson.Feature(geometry=point, properties=properties)
-    features.append(feature)
-
-feature_collection = geojson.FeatureCollection(features)
-
-with open("bikes.geojson", "w") as f:
-    geojson.dump(feature_collection, f)
-# Save bikes to bikes.geojson file
-features = []
-for bike in bikes:
-    properties = {
-        'id': bike.id
-    }
-    geometry = bike.location
-    feature = geojson.Feature(geometry=geometry, properties=properties)
-    features.append(feature)
-
-
-feature_collection = geojson.FeatureCollection(features)
-with open('bikes.geojson', 'w') as f:
-    geojson.dump(feature_collection, f)
