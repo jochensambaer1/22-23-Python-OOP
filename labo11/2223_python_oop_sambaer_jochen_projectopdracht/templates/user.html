@@ -5,20 +5,28 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+
+    <title>Document</title>
     <style>
       table {
-          border-collapse: collapse;
-          width: 100%;
+        border-collapse: collapse;
+        width: 100%;
       }
-      th, td {
-          padding: 8px;
-          text-align: left;
-          border-bottom: 1px solid #ddd;
+      th,
+      td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
       }
       th {
-          background-color: #f2f2f2;
+        background-color: #f2f2f2;
       }
-  </style>
+    </style>
   </head>
   <body>
     <nav>

@@ -1,0 +1,189 @@
+[
+  {
+    "id": 1,
+    "first_name": "Erkan",
+    "last_name": "Oatney",
+    "full_name": "Erkan Oatney",
+    "time_biking_minutes": 55,
+    "time_biking_hours": 0,
+    "total_time_biking_minutes": 55,
+    "saldo": 227.51,
+    "bike": {}
+  },
+  {
+    "id": 2,
+    "first_name": "Niloufar",
+    "last_name": "Nahhas",
+    "full_name": "Niloufar Nahhas",
+    "time_biking_minutes": 41,
+    "time_biking_hours": 6,
+    "total_time_biking_minutes": 401,
+    "saldo": 611.86,
+    "bike": {}
+  },
+  {
+    "id": 3,
+    "first_name": "Wim",
+    "last_name": "Wesneski",
+    "full_name": "Wim Wesneski",
+    "time_biking_minutes": 51,
+    "time_biking_hours": 0,
+    "total_time_biking_minutes": 51,
+    "saldo": 180.97,
+    "bike": {}
+  },
+  {
+    "id": 4,
+    "first_name": "Nemanja",
+    "last_name": "Ziner",
+    "full_name": "Nemanja Ziner",
+    "time_biking_minutes": 42,
+    "time_biking_hours": 5,
+    "total_time_biking_minutes": 342,
+    "saldo": 242.88,
+    "bike": {}
+  },
+  {
+    "id": 5,
+    "first_name": "Imme",
+    "last_name": "Kourafas",
+    "full_name": "Imme Kourafas",
+    "time_biking_minutes": 58,
+    "time_biking_hours": 8,
+    "total_time_biking_minutes": 538,
+    "saldo": 174.44,
+    "bike": {}
+  },
+  {
+    "id": 6,
+    "first_name": "Desie",
+    "last_name": "Eadens",
+    "full_name": "Desie Eadens",
+    "time_biking_minutes": 1,
+    "time_biking_hours": 5,
+    "total_time_biking_minutes": 301,
+    "saldo": 379.85,
+    "bike": {}
+  },
+  {
+    "id": 7,
+    "first_name": "Beertje",
+    "last_name": "Papavasiliou",
+    "full_name": "Beertje Papavasiliou",
+    "time_biking_minutes": 50,
+    "time_biking_hours": 4,
+    "total_time_biking_minutes": 290,
+    "saldo": 462.87,
+    "bike": {}
+  },
+  {
+    "id": 8,
+    "first_name": "Jessy",
+    "last_name": "Bergantino",
+    "full_name": "Jessy Bergantino",
+    "time_biking_minutes": 24,
+    "time_biking_hours": 2,
+    "total_time_biking_minutes": 144,
+    "saldo": 351.12,
+    "bike": {}
+  },
+  {
+    "id": 9,
+    "first_name": "Henrica",
+    "last_name": "Laclaire",
+    "full_name": "Henrica Laclaire",
+    "time_biking_minutes": 22,
+    "time_biking_hours": 9,
+    "total_time_biking_minutes": 562,
+    "saldo": 57.11,
+    "bike": {}
+  },
+  {
+    "id": 10,
+    "first_name": "Mamadou",
+    "last_name": "Fernow",
+    "full_name": "Mamadou Fernow",
+    "time_biking_minutes": 43,
+    "time_biking_hours": 8,
+    "total_time_biking_minutes": 523,
+    "saldo": 370.17,
+    "bike": {}
+  },
+  {
+    "id": 11,
+    "first_name": "Mahmut",
+    "last_name": "Scoggin",
+    "full_name": "Mahmut Scoggin",
+    "time_biking_minutes": 11,
+    "time_biking_hours": 4,
+    "total_time_biking_minutes": 251,
+    "saldo": 901.02,
+    "bike": {}
+  },
+  {
+    "id": 12,
+    "first_name": "Alana",
+    "last_name": "Brandreth",
+    "full_name": "Alana Brandreth",
+    "time_biking_minutes": 52,
+    "time_biking_hours": 5,
+    "total_time_biking_minutes": 352,
+    "saldo": 734.67,
+    "bike": {}
+  },
+  {
+    "id": 13,
+    "first_name": "Ike",
+    "last_name": "Prendeville",
+    "full_name": "Ike Prendeville",
+    "time_biking_minutes": 59,
+    "time_biking_hours": 9,
+    "total_time_biking_minutes": 599,
+    "saldo": 662.7,
+    "bike": {}
+  },
+  {
+    "id": 14,
+    "first_name": "Deanne",
+    "last_name": "Ehnes",
+    "full_name": "Deanne Ehnes",
+    "time_biking_minutes": 11,
+    "time_biking_hours": 4,
+    "total_time_biking_minutes": 251,
+    "saldo": 284.65,
+    "bike": {}
+  },
+  {
+    "id": 15,
+    "first_name": "Sof\u00eda",
+    "last_name": "Sowards",
+    "full_name": "Sof\u00eda Sowards",
+    "time_biking_minutes": 37,
+    "time_biking_hours": 1,
+    "total_time_biking_minutes": 97,
+    "saldo": 582.39,
+    "bike": {}
+  },
+  {
+    "id": 16,
+    "first_name": "Cihad",
+    "last_name": "Hartweg",
+    "full_name": "Cihad Hartweg",
+    "time_biking_minutes": 22,
+    "time_biking_hours": 0,
+    "total_time_biking_minutes": 22,
+    "saldo": 629.93,
+    "bike": {}
+  },
+  {
+    "id": 17,
+    "first_name": "Cuma",
+    "last_name": "Gottshalk",
+    "full_name": "Cuma Gottshalk",
+    "time_biking_minutes": 47,
+    "time_biking_hours": 6,
+    "total_time_biking_minutes": 407,
+    "saldo": 168.46,
+    "bike": {}
+  }
+]

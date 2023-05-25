@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generated Names</title>
+</head>
+<body>
+    <h1>Generated Names</h1>
+
+    <form id="nameForm">
+        <label for="numNamesInput">Number of Names:</label>
+        <input type="number" id="numNamesInput" value="10">
+        <button type="submit">Generate Names</button>
+    </form>
+
+    <ul id="nameList"></ul>
+
+    <script>
+        const nameForm = document.getElementById('nameForm');
+        const numNamesInput = document.getElementById('numNamesInput');
+        const nameList = document.getElementById('nameList');
+
+        nameForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const numNames = numNamesInput.value;
+
+            fetch(`/generate_names?num_names=${numNames}`)
+                .then(response => response.json())
+                .then(data => {
+                    nameList.innerHTML = '';
+                    data.forEach(name => {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = name.full_name;
+                        nameList.appendChild(listItem);
+                    });
+                });
+        });
+    </script>
+</body>
+</html>

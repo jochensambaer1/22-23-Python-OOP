@@ -1,31 +1,151 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>Bike Stations</title>
   </head>
   <body>
-    <nav>
-      <ul>
-        <li><a href="/">Home</a></li>
-        <li><a href="/station">Homstatione</a></li>
-        <li><a href="/transporter">transporter</a></li>
-        <li><a href="/user">user</a></li>
-        <li><a href="/bikes">bikes</a></li>
-      </ul>
-    </nav>
-    <tr>
-      <th>ID</th>
-      <th>First Name</th>
-      <th>Last Name</th>
-      <th>Full Name</th>
-      <th>Time Biking (Minutes)</th>
-      <th>Time Biking (Hours)</th>
-      <th>Total Time Biking (Minutes)</th>
-      <th>Saldo</th>
-    </tr>
-    <h1>her is eefghn tekst</h1>
+    <h1>Bike Stations</h1>
+
+    <h2>All Stations</h2>
+    <table>
+      <thead>
+        <tr>
+          <!-- Table header columns -->
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Table body rows -->
+      </tbody>
+    </table>
+
+    <!-- Class Pages -->
+    <h2>Class Pages</h2>
+    <ul>
+      <!-- List items for class pages -->
+    </ul>
+
+    <h2>User Page</h2>
+    <h1>Generated Names</h1>
+
+    <form id="nameForm">
+      <label for="numNamesInput">Number of Names:</label>
+      <input type="number" id="numNamesInput" value="10">
+      <button type="submit">Generate Names</button>
+    </form>
+
+    <ul id="nameList"></ul>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+    <h2>User Class</h2>
+    <table>
+      <thead>
+        <tr>
+          <!-- Table header columns -->
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Table body rows -->
+      </tbody>
+    </table>
+
+    <!-- Add User Form -->
+    <h2>Add User</h2>
+    <form action="/add_user" method="post">
+      <label for="name">Name:</label>
+      <input type="text" id="name" name="name" required /><br />
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" required /><br />
+      <label for="location">Location:</label>
+      <input type="text" id="location" name="location" required /><br />
+      <input type="submit" value="Add User" />
+    </form>
+
+    <!-- Slot Class -->
+    <h2>Slot Class</h2>
+    <!-- Display Slot class information here -->
+ 
+    <!-- Bike Class -->
+    <h2>Bike Class</h2>
+    <table>
+      <thead>
+        <tr>
+          <!-- Table header columns -->
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Table body rows -->
+      </tbody>
+    </table>
+
+    <!-- Add Bike Form -->
+    <h2>Add Bike</h2>
+    <form action="/add_bike" method="post">
+      <label for="bike_id">Bike ID:</label>
+      <input type="text" id="bike_id" name="bike_id" required /><br />
+      <label for="state">State:</label>
+      <input type="text" id="state" name="state" required /><br />
+      <label for="borrow_time">Borrow Time:</label>
+      <input type="text" id="borrow_time" name="borrow_time" /><br />
+      <label for="latitude">Latitude:</label>
+      <input type="text" id="latitude" name="latitude" required /><br />
+      <label for="longitude">Longitude:</label>
+      <input type="text" id="longitude" name="longitude" required /><br />
+      <input type="submit" value="Add Bike" />
+    </form>
+
+    <!-- BikeTransporter Class -->
+    <h2>BikeTransporter Class</h2>
+    <!-- Display BikeTransporter class information here -->
+
+    <script>
+      // Get the form and name list elements
+      const nameForm = document.getElementById('nameForm');
+      const nameList = document.getElementById('nameList');
+
+      // Add event listener to the form submission
+      nameForm.addEventListener('submit', (e) => {
+        e.preventDefault(); // Prevent form submission
+        const numNamesInput = document.getElementById('numNamesInput');
+        const numNames = parseInt(numNamesInput.value); // Get the number of names to generate
+
+        // Clear the name list
+        nameList.innerHTML = '';
+
+        // Generate and display the names
+        for (let i = 0; i < numNames; i++) {
+          const li = document.createElement('li');
+          getRandomName()
+            .then(name => {
+              li.textContent = name;
+              nameList.appendChild(li);
+            })
+            .catch(error => {
+              console.error('Error generating name:', error);
+            });
+        }
+      });
+
+      async function getRandomName() {
+        try {
+          console.log('Fetching names...');
+          const response = await fetch('/static/names.json');
+          console.log('Got names!');
+          const data = await response.json();
+
+          const randomFirstNameIndex = Math.floor(Math.random() * data.first_name.length);
+          const randomFirstName = data.first_name[randomFirstNameIndex];
+
+          const randomLastNameIndex = Math.floor(Math.random() * data.last_name.length);
+          const randomLastName = data.last_name[randomLastNameIndex];
+
+          const fullName = randomFirstName + ' ' + randomLastName;
+          return fullName;
+        } catch (error) {
+          console.error('Error fetching names: ' + error);
+          throw new Error('Error fetching names: ' + error);
+        }
+      }
+    </script>
   </body>
 </html>

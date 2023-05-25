@@ -1,7 +1,7 @@
 import json
 from flask import Flask, render_template
 
-
+css_file = "/styles.css"
 app = Flask(__name__)
 
 @app.route('/')
@@ -34,15 +34,15 @@ def bikes():
             'borrow_time': properties['borrow_time']
         }
         bikes.append(bike)
-    return render_template('bikes.html')
+    return render_template('bikes.html', css_link = css_file)
 @app.route('/station')
 def station():
-    return render_template('station.html')
+    return render_template('station.html', css_link = css_file)
 @app.route('/transporter')
 def transporter():
-    return render_template('transporter.html')
+    return render_template('transporter.html', css_link = css_file)
 @app.route('/user')
 def user():
-    return render_template('user.html')
+    return render_template('user.html', css_link = css_file)
 if __name__ == '__main__':
     app.run()
