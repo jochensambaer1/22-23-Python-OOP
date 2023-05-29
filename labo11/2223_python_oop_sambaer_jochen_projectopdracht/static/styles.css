@@ -5,7 +5,10 @@ body {
   padding: 0;
   
 }
-
+.scrollable {
+  height: 200px;
+  overflow-y: scroll;
+}
 .container {
   max-width: 1200px;
   margin: 0 auto;

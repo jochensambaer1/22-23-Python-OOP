@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>simulation</title>
+  </head>
+  <body>
+    <li><a href="/">Home</a></li>
+    <style>
+      .scrollable {
+        height: 200px;
+        overflow-y: scroll;
+      }
+    </style>
+    <div class="scrollable">
+      <table>
+        <thead>
+          <tr>
+            <th><a href="?sort=id">ID</a></th>
+            <th><a href="?sort=object_type">Object Type</a></th>
+            <th><a href="?sort=velo_type">Velo Type</a></th>
+            <th><a href="?sort=location">Location</a></th>
+            <th><a href="?sort=street_name">Street Name</a></th>
+            <th><a href="?sort=house_number">House Number</a></th>
+            <th><a href="?sort=additional_info">Additional Info</a></th>
+            <th><a href="?sort=district">District</a></th>
+            <th><a href="?sort=postal_code">Postal Code</a></th>
+            <th><a href="?sort=object_code">Object Code</a></th>
+            <th><a href="?sort=usage_status">Usage Status</a></th>
+            <th><a href="?sort=parking_spaces">Parking Spaces</a></th>
+            <th><a href="?sort=name">Name</a></th>
+            <th><a href="?sort=latitude">Latitude</a></th>
+            <th><a href="?sort=longitude">Longitude</a></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+        <tbody id="stationTableBody"></tbody>
+      </table>
+    </div>
+  </body>
+</html>
