@@ -2,6 +2,8 @@
 <html>
   <head>
     <title>Bike Stations</title>
+    
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
   </head>
   <body>
     <li><a href="/sim">sim</a></li>
@@ -11,7 +13,7 @@
       <input type="number" name="input_text" />
       <button type="submit" name="generet users">generet users</button>
 
-      <button type="submit" name="generat transporters">generat transporters</button>
+      <button type="submit" name="generat transporters">Other Button</button>
     </form>
 
     <h2>All Stations</h2>
@@ -55,7 +57,6 @@
 
     <ul id="nameList"></ul>
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
 
     <h2>User</h2>
     <div class="scrollable">
