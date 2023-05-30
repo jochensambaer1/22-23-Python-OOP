@@ -6,36 +6,34 @@
   </head>
   <body>
     <li><a href="/">Home</a></li>
+    <form action="/submit" method="post">
+      <input type="number" name="input_text" />
+
+      <button type="submit" name="generat bikes">generat bikes Button</button>
+      <button type="submit" name="simulet">simulet Button</button>
+    </form>
     <style>
       .scrollable {
         height: 200px;
         overflow-y: scroll;
       }
     </style>
+    <h2>Bike</h2>
     <div class="scrollable">
-      <table>
+      <table id="bikeTable">
         <thead>
           <tr>
-            <th><a href="?sort=id">ID</a></th>
-            <th><a href="?sort=object_type">Object Type</a></th>
-            <th><a href="?sort=velo_type">Velo Type</a></th>
-            <th><a href="?sort=location">Location</a></th>
-            <th><a href="?sort=street_name">Street Name</a></th>
-            <th><a href="?sort=house_number">House Number</a></th>
-            <th><a href="?sort=additional_info">Additional Info</a></th>
-            <th><a href="?sort=district">District</a></th>
-            <th><a href="?sort=postal_code">Postal Code</a></th>
-            <th><a href="?sort=object_code">Object Code</a></th>
-            <th><a href="?sort=usage_status">Usage Status</a></th>
-            <th><a href="?sort=parking_spaces">Parking Spaces</a></th>
-            <th><a href="?sort=name">Name</a></th>
-            <th><a href="?sort=latitude">Latitude</a></th>
-            <th><a href="?sort=longitude">Longitude</a></th>
+            <th>ID</th>
+            <th>State</th>
+            <th>Borrow Time</th>
+            <th>Latitude</th>
+            <th>Longitude</th>
           </tr>
         </thead>
-        <tbody></tbody>
-        <tbody id="stationTableBody"></tbody>
+        <tbody id="bikeTableBody"></tbody>
       </table>
+
+      
     </div>
   </body>
 </html>

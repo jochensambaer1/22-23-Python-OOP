@@ -2,25 +2,39 @@
 const nameForm = document.getElementById("nameForm");
 const nameList = document.getElementById("nameList");
 
-// Fetch bikes.geojson and populate the bike table
 fetch("/static/bikes.geojson")
   .then((response) => response.json())
   .then((bikeData) => {
     const bikeTableBody = document.getElementById("bikeTableBody");
     bikeData.features.forEach((feature) => {
+      const properties = JSON.parse(feature); // Parse the feature string as JSON
+      const id = properties.id;
+      const state = properties.state;
+      const borrow_time = properties.borrow_time;
+      const latitude = feature.geometry.coordinates[1];
+      const longitude = feature.geometry.coordinates[0];
+      const location = properties.location;
+      const last_state_change = new Date().toISOString();
+
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td>${feature.properties.id}</td>
-        <td>${feature.properties.state}</td>
-        <td>${feature.properties.borrow_time || ""}</td>
-        <td>${feature.geometry.coordinates[1]}</td>
-        <td>${feature.geometry.coordinates[0]}</td>
+        <td>${id}</td>
+        <td>${state}</td>
+        <td>${borrow_time}</td>
+        <td>${latitude}</td>
+        <td>${longitude}</td>
+        <td>${location}</td>
+        <td>${last_state_change}</td>
       `;
       bikeTableBody.appendChild(row);
     });
   })
-  // Fetch velo.geojson and populate the station table
   .catch((error) => console.log(error));
+
+
+
+  // Fetch velo.geojson and populate the station table
+  
 fetch("/static/velo.geojson")
   .then((response) => response.json())
   .then((stationData) => {
@@ -94,3 +108,19 @@ fetch("/static/name.geojson")
   })
   .catch((error) => console.log(error));
 
+  fetch("/static/simulation.geojson")
+  .then((response) => response.json())
+  .then((simData) => {
+    const simTableBody = document.getElementById("simTableBody");
+    simData.features.forEach((feature) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${feature.properties.action}</td>
+        <td>${feature.properties.user}</td>
+        <td>${feature.properties.bike_id}</td>
+        <td>${feature.geometry.station}</td>
+        
+      `;
+      simTableBody.appendChild(row);
+    });
+  })

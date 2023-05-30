@@ -1,9 +1,15 @@
+from ast import List
 from flask import Flask, request, redirect, url_for, render_template
 import json
 import random
 import logging
 import geojson
 import os
+from enum import Enum
+from datetime import datetime
+from typing import List
+import time
+
 
 
 
@@ -47,15 +53,52 @@ class Slot:
         self.id = slot_id
         self.bike = bike
 
-
 class Bike:
-    def __init__(self, bike_id, state, borrow_time, latitude, longitude):
-        self.id = bike_id
+    def __init__(self, id, state, borrow_time, latitude, longitude, location):
+        self.id = id
         self.state = state
         self.borrow_time = borrow_time
         self.latitude = latitude
         self.longitude = longitude
-        logger.debug("Bike object was created with id %s", self.id)
+        self.location = location
+        self.last_state_change = datetime.now()
+    def to_geojson(self):
+        return geojson.Feature(geometry=geojson.Point(self.location), properties={
+            'id': self.id,
+            'state': self.state.value,
+            'borrow_time': self.borrow_time
+        })
+        return json.dumps(bike_feature)
+
+        
+class BikeState(Enum):
+    def __init__(self, state):
+        self.state = state
+
+    def to_dict(self):
+        return {"state": self.state}
+
+
+
+
+
+
+class BikeState(Enum):
+    AVAILABLE = 'available'
+    BORROWED = 'borrowed'
+    OVERDUE = 'overdue'
+    MAINTENANCE = 'maintenance'
+    
+
+class BikeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Bike):
+            return obj.__dict__
+        if isinstance(obj, BikeState):
+            return obj.value
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return super().default(obj)
 
 
 class User:
@@ -98,24 +141,18 @@ class Transporter(User):
 class BikeShareSystem:
     def __init__(self, geojson_data):
         self.stations = self.load_stations(geojson_data)
-        self.users = []
-        self.transporters = []
 
-    # Load stations from JSON data
     def load_stations(self, geojson_data):
+        features = geojson_data["features"]
         stations = []
-
-        for feature in geojson_data["features"]:
+        for feature in features:
             properties = feature["properties"]
-            station_id = properties["OBJECTID"]
             name = properties["Naam"]
-            capacity = properties["Aantal_plaatsen"]
-            slots = [Slot(slot_id) for slot_id in range(capacity)]
-            station = Station(station_id, name, slots, feature)
+            coordinates = feature["geometry"]["coordinates"]
+            station = {"name": name, "coordinates": coordinates}
             stations.append(station)
-
-        logger.info("Stations loaded: {}".format(len(stations)))
         return stations
+
 
 
 def generate_random_users(num_users):
@@ -276,6 +313,89 @@ def submit():
                 with open('static/Transporters.geojson', 'w') as f:
                     json.dump(name_list, f)
             return redirect(url_for('index'))  
+        
+        elif 'generat bikes' in request.form:
+                        
+            # Create a list of bikes
+            bike_list = []
+            for i in range(input_int):
+                bike_id = i+1
+                bike_state = BikeState.AVAILABLE
+                bike_location = (random.uniform(-90, 90), random.uniform(-180, 180))
+                bike_borrow_time = 0
+                bike = Bike(id=bike_id, state=bike_state, borrow_time=0, latitude=0.0, longitude=0.0, location=bike_location)
+                bike_json = json.dumps(bike, cls=BikeEncoder)
+                bike_list.append(bike)
+                
+
+            # Convert bikes to geojson and save to file
+            features = []
+            for bike in bike_list:
+                feature = bike.to_geojson()
+                features.append(feature)
+
+            feature_collection = geojson.FeatureCollection(features)
+            with open('static/bikes.geojson', 'w') as k:
+                with open('static/bikes.geojson', 'w') as k:
+                    geojson.dump(feature_collection, k)
+     
+
+        
+
+
+
+            return redirect(url_for('index'))  
+        
+        elif 'simulet' in request.form:
+           # Load stations from velo.geojson file
+            stations = load_stations('static/velo.geojson')
+            print(f"Number of stations: {len(stations)}")
+
+            # Create a list of User objects
+            users = [User(f"User {i}", "Doe", random.choice(stations), random.choice(stations)) for i in range(input_int)]
+
+            # Create a list of Bike objects
+            bikes = [Bike(i) for i in range(input_int)]
+            # Create an empty list to store the simulation data
+            simulation_data = []
+
+            # Simulate bike rentals and returns
+            for i in range(input_int):
+                user = random.choice(users)
+                bike = random.choice(bikes)
+                station = random.choice(stations)
+                if user.bike is None:
+                    print(f"{user.name} is renting bike {bike.bike_id}")
+                    user.borrow_bike(bike)
+                    bike.move_to_station(None)
+                    simulation_data.append({
+                        "action": "rent",
+                        "user": user.name,
+                        "bike_id": bike.bike_id,
+                        "station": None
+                    })
+                else:
+                    print(f"{user.name} is returning bike {user.bike.bike_id} to station {station.name}")
+                    user.return_bike(station)
+                    bike_id = user.bike.bike_id if user.bike is not None else None
+                    simulation_data.append({
+                        "action": "return",
+                        "user": user.name,
+                        "bike_id": bike_id,
+                        "station": station.name
+                    })
+
+            # Write the simulation data to a JSON file
+            with open("simulation.json", "w") as f:
+                json.dump(simulation_data, f)
+
+                
+            # Write the stations to a JSON file using the StationEncoder
+            with open("stations.json", "w") as f:
+                json.dump(stations, f, cls=StationEncoder)
+                        
+                    
+            return redirect(url_for('sim'))  
         else:
             return 'Unknown button clicked!'
     except ValueError:
@@ -302,5 +422,4 @@ if __name__ == "__main__":
     bike_share_system = BikeShareSystem(velo_geojson_data)
    
     app.run(debug=True)
-
 

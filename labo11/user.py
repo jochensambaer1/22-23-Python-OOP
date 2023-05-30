@@ -201,7 +201,7 @@ def load_stations(filename: str) -> List[Station]:
 
 
 # Load stations from stations.geojson file
-stations = load_stations('stations.geojson')
+stations = load_stations('velo.geojson')
 print(f"Number of stations: {len(stations)}")
 
 # Create a list of User objects
