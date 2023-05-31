@@ -1,5 +1,5 @@
 from ast import List
-from flask import Flask, request, redirect, url_for, render_template
+from flask import Flask, render_template, request, redirect, url_for, session
 import json
 import random
 import logging
@@ -14,6 +14,7 @@ import time
 
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key'
 app.config['JSON_SORT_KEYS'] = False
 logger = logging.getLogger(__name__)
 
@@ -36,7 +37,7 @@ class Station:
         self.parking_spaces = properties['Aantal_plaatsen']
         self.name = name
         self.latitude, self.longitude = feature['geometry']['coordinates']
-        self.slots = slots
+        self.slots = self.create_slots()
 
     def create_slots(self):
         """
@@ -78,18 +79,12 @@ class BikeState(Enum):
     def to_dict(self):
         return {"state": self.state}
 
-
-
-
-
-
 class BikeState(Enum):
     AVAILABLE = 'available'
     BORROWED = 'borrowed'
     OVERDUE = 'overdue'
     MAINTENANCE = 'maintenance'
     
-
 class BikeEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Bike):
@@ -100,29 +95,55 @@ class BikeEncoder(json.JSONEncoder):
             return obj.isoformat()
         return super().default(obj)
 
-
 class User:
-    def __init__(self, user_id, first_name, last_name, full_name, time_biking, total_time_biking_minutes, saldo):
-        self.user_id = user_id  # The user ID
+    def __init__(self, first_name, last_name, current_station, destination_station, time_biking=0, total_time_biking_minutes=0, saldo=0):
         self.first_name = first_name
         self.last_name = last_name
-        self.full_name = full_name
+        self.current_station = current_station
+        self.destination_station = destination_station
+        self.bike = None
         self.time_biking = time_biking
         self.total_time_biking_minutes = total_time_biking_minutes
         self.saldo = saldo
+
+    def borrow_bike(self, bike):
+        self.bike = bike
+        self.current_station.remove_bike(bike)
+        bike.borrow(self)
+
+    def return_bike(self, station):
+        self.current_station = station
+        station.add_bike(self.bike)
+        self.bike.returned()
         self.bike = None
 
-        logger.debug(f"Created user {self.user_id} with name {self.full_name} and saldo {self.saldo}")
-class Transporter(User):
-    id = 0
-    state = "available"
+    def move_bike_to_nearest_station(self, stations):
+        nearest_station = self.find_nearest_station(stations)
+        self.bike.move_to_station(nearest_station)
+        self.current_station = nearest_station
 
-    def __init__(self, first_name, last_name):
-        super().__init__(Transporter.id, first_name, last_name, f"{first_name} {last_name}", 0, 0, 0)
-        self.bikes = []
-        self.id = Transporter.id
-        Transporter.id += 1
+class Transporter:
+    def __init__(self, first_name, last_name, station1, station2):
+        self.first_name = first_name
+        self.last_name = last_name
+        self.station1 = station1
+        self.station2 = station2
 
+
+    def redistribute_bikes(self, stations):
+        for station in stations:
+            if station.is_full():
+                nearby_station = self.find_nearest_station(stations, station)
+                bikes_to_transfer = station.get_bikes_to_transfer()
+                for bike in bikes_to_transfer:
+                    station.remove_bike(bike)
+                    nearby_station.add_bike(bike)
+            elif station.is_empty():
+                nearby_station = self.find_nearest_station(stations, station)
+                bikes_to_transfer = nearby_station.get_bikes_to_transfer()
+                for bike in bikes_to_transfer:
+                    nearby_station.remove_bike(bike)
+                    station.add_bike(bike)
 
     def collect_bikes(self, station):
         for i in range(station.capacity):
@@ -136,6 +157,7 @@ class Transporter(User):
                 self.bikes[i].station = station
                 self.bikes.pop(i)
                 i -= 1
+
 
 
 class BikeShareSystem:
@@ -193,12 +215,10 @@ def submit():
     try:
         input_int = int(request.form['input_text'])
         if 'generet users' in request.form:
-                    
             num_names = int(request.args.get('num_names', input_int))  # Default to 10 names if not specified
 
             with open('data/names.json', 'r', encoding='utf-8') as f:
                 names_data = json.load(f)
-
 
             # Assuming names_data is a list of dictionaries, you can extract the first and last names
             first_names = names_data['first_name']
@@ -247,19 +267,21 @@ def submit():
 
                 # Add the new person to the name_list
                 name_list.append(name_dict)
+
+            # Store the list of names in memory
+            session['name_list'] = name_list
             with open('static/name.geojson', 'w') as f:        
-                # Write the list of names to a JSON file
-                with open('static/name.geojson', 'w') as f:
-                    json.dump(name_list, f)
-            return redirect(url_for('index'))  
-            
+                            # Write the list of names to a JSON file
+                            with open('static/name.geojson', 'w') as f:
+                                json.dump(name_list, f)
+                        
+            return redirect(url_for('index'))
+
         elif 'generat transporters' in request.form:
-                    
             num_names = int(request.args.get('num_names', input_int))  # Default to 10 names if not specified
 
             with open('data/names.json', 'r', encoding='utf-8') as f:
                 names_data = json.load(f)
-
 
             # Assuming names_data is a list of dictionaries, you can extract the first and last names
             first_names = names_data['first_name']
@@ -287,8 +309,7 @@ def submit():
                 # Calculate the total time biking in minutes
                 total_time_biking_minutes = time_biking_minutes + (time_biking_hours * 60)
 
-                # Generate a random saldo (account balance) with a maximum of 2 decimal places
-                saldo = round(random.uniform(0, 1000), 2)
+               
 
                 # Create an empty bike object
                 bike = {}
@@ -302,20 +323,22 @@ def submit():
                     'time_biking_minutes': time_biking_minutes,
                     'time_biking_hours': time_biking_hours,
                     'total_time_biking_minutes': total_time_biking_minutes,
-                    'saldo': saldo,
                     'bike': bike
                 }
 
                 # Add the new person to the name_list
+                name_list.append(name_dict)
                 name_list.append(name_dict)
             with open('static/Transporters.geojson', 'w') as f:        
             # Write the list of names to a JSON file
                 with open('static/Transporters.geojson', 'w') as f:
                     json.dump(name_list, f)
-            return redirect(url_for('index'))  
-        
+            # Store the list of names in memory
+            session['name_list'] = name_list
+
+            return redirect(url_for('index'))
+
         elif 'generat bikes' in request.form:
-                        
             # Create a list of bikes
             bike_list = []
             for i in range(input_int):
@@ -324,102 +347,124 @@ def submit():
                 bike_location = (random.uniform(-90, 90), random.uniform(-180, 180))
                 bike_borrow_time = 0
                 bike = Bike(id=bike_id, state=bike_state, borrow_time=0, latitude=0.0, longitude=0.0, location=bike_location)
-                bike_json = json.dumps(bike, cls=BikeEncoder)
                 bike_list.append(bike)
-                
 
-            # Convert bikes to geojson and save to file
+            # Convert bikes to geojson
             features = []
             for bike in bike_list:
                 feature = bike.to_geojson()
                 features.append(feature)
 
             feature_collection = geojson.FeatureCollection(features)
+
+            # Store the feature collection in memory
+            session['bike_collection'] = feature_collection
+                   # Add the new person to the name_list
+            feature_collection = geojson.FeatureCollection(features)
             with open('static/bikes.geojson', 'w') as k:
                 with open('static/bikes.geojson', 'w') as k:
                     geojson.dump(feature_collection, k)
-     
 
-        
+            return redirect(url_for('index'))
 
-
-
-            return redirect(url_for('index'))  
-        
         elif 'simulet' in request.form:
-           # Load stations from velo.geojson file
-            stations = load_stations('static/velo.geojson')
-            print(f"Number of stations: {len(stations)}")
+             # Load stations from velo_geojson_data
+            stations = velo_geojson_data['features']
+            num_stations = len(stations)
 
-            # Create a list of User objects
-            users = [User(f"User {i}", "Doe", random.choice(stations), random.choice(stations)) for i in range(input_int)]
+            # Create a list of User/Transporter objects
+            users = [User('John', 'Doe', random.choice(stations), random.choice(stations)) for _ in range(input_int)]
+            transporters = [Transporter('John', 'Doe', random.choice(stations), random.choice(stations)) for _ in range(input_int)]
 
-            # Create a list of Bike objects
-            bikes = [Bike(i) for i in range(input_int)]
-            # Create an empty list to store the simulation data
+
+            # Initialize simulation
+            simulation_steps = input_int
+
             simulation_data = []
 
-            # Simulate bike rentals and returns
-            for i in range(input_int):
-                user = random.choice(users)
-                bike = random.choice(bikes)
-                station = random.choice(stations)
-                if user.bike is None:
-                    print(f"{user.name} is renting bike {bike.bike_id}")
-                    user.borrow_bike(bike)
-                    bike.move_to_station(None)
-                    simulation_data.append({
-                        "action": "rent",
-                        "user": user.name,
-                        "bike_id": bike.bike_id,
-                        "station": None
-                    })
-                else:
-                    print(f"{user.name} is returning bike {user.bike.bike_id} to station {station.name}")
-                    user.return_bike(station)
-                    bike_id = user.bike.bike_id if user.bike is not None else None
-                    simulation_data.append({
-                        "action": "return",
-                        "user": user.name,
-                        "bike_id": bike_id,
-                        "station": station.name
-                    })
+            for step in range(simulation_steps):
+                # Simulate bike borrowing/returning by users
+                for user in users:
+                    if user.bike is None:
+                        available_bikes = user.current_station.get_bikes()
+                        if available_bikes:
+                            bike = random.choice(available_bikes)
+                            user.borrow_bike(bike)
+                            simulation_data.append({
+                                "action": "rent",
+                                "user": user.full_name,
+                                "bike_id": bike.id,
+                                "station": user.current_station.name
+                            })
 
-            # Write the simulation data to a JSON file
-            with open("simulation.json", "w") as f:
-                json.dump(simulation_data, f)
+                    elif user.current_station == user.destination_station:
+                        user.return_bike(user.current_station)
+                        simulation_data.append({
+                            "action": "return",
+                            "user": user.full_name,
+                            "bike_id": user.bike.id,
+                            "station": user.current_station.name
+                        })
 
-                
+                    else:
+                        user.move_bike_to_nearest_station(stations)
+
+                # Simulate bike redistribution by transporter
+                transporters.redistribute_bikes(stations)
+
+            # Store the simulation data in memory
+            session['simulation_data'] = simulation_data
+
             # Write the stations to a JSON file using the StationEncoder
             with open("stations.json", "w") as f:
                 json.dump(stations, f, cls=StationEncoder)
-                        
+
                     
-            return redirect(url_for('sim'))  
+                        
+
+            return redirect(url_for('sim'))
         else:
             return 'Unknown button clicked!'
+
     except ValueError:
         return 'Invalid input: not a number!'
-    
+
    
 
+
+
 if __name__ == "__main__":
+    logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
     formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] [%(name)s] - %(message)s")
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
 
-    with open("static/velo.geojson") as file:
-        velo_geojson_data = json.load(file)
-    with open("static/bikes.geojson") as file:
-         bike_geojson_data = json.load(file)
-    with open("static/name.geojson") as file:
-        user_geojson_data = json.load(file)
-    with open("static/Transporters.geojson") as file:
-        transporter_geojson_data = json.load(file)
+    with open("static/velo.geojson", 'r') as file1:
+        velo_geojson_data = json.load(file1)
+        logger.debug("velo.geojson ingelezen en opgeslagen in het geheugen")
 
-    bike_share_system = BikeShareSystem(velo_geojson_data)
-   
+    with open("static/bikes.geojson", 'r') as file2:
+        bike_geojson_data = json.load(file2)
+        logger.debug("bikes.geojson ingelezen en opgeslagen in het geheugen")
+
+    with open("static/name.geojson", 'r') as file3:
+        user_geojson_data = json.load(file3)
+        logger.debug("name.geojson ingelezen en opgeslagen in het geheugen")
+
+    with open("static/Transporters.geojson", 'r') as file4:
+        transporter_geojson_data = json.load(file4)
+        logger.debug("Transporters.geojson ingelezen en opgeslagen in het geheugen")
+
+    with open("static/simulation.geojson", 'r') as file5:
+        simulation_geojson_data = json.load(file5)
+        logger.debug("simulation.geojson ingelezen en opgeslagen in het geheugen")
+  
+    logger.info("Starting the Flask application")
     app.run(debug=True)
+
+    logger.info("Exiting the application")
+
+
 
