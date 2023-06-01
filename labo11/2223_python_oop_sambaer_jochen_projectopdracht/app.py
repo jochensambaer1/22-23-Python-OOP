@@ -404,7 +404,7 @@ def submit():
             # Load stations from velo_geojson_data
             stations = velo_geojson_data['features']
             num_stations = len(stations)
-            
+            print(f"Number of stations: {len(stations)}")
             # Create a list of User objects
             users = [User(f"User {i}", "Doe", random.choice(stations), random.choice(stations)) for i in range(input_int)]
 

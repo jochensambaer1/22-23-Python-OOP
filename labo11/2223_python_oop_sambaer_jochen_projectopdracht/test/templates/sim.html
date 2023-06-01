@@ -2,22 +2,26 @@
 <html>
   <head>
     <title>simulation</title>
+    <style>
+      .scrollable {
+        max-height: 200px;
+        overflow-y: scroll;
+      }
+    </style>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
   </head>
   <body>
     <li><a href="/">Home</a></li>
     <form action="/submit" method="post">
       <input type="number" name="input_text" />
-
-      <button type="submit" name="generat bikes">generat bikes Button</button>
-      <button type="submit" name="simulet">simulet Button</button>
+      <button type="submit" name="generateUsers">Generate Users</button>
+      <button type="submit" name="generateBikes">Generate Bikes</button>
+      <button type="submit" name="generateTransporters">Generate Transporters</button>
     </form>
-    <style>
-      .scrollable {
-        height: 200px;
-        overflow-y: scroll;
-      }
-    </style>
+    <form action="/submit" method="post">
+      <input type="number" name="input_text" />
+      <button type="submit" name="simulet">simulet</button>
+    </form>
     <h2>Bike</h2>
     <div class="scrollable">
       <table id="bikeTable">
@@ -32,8 +36,90 @@
         </thead>
         <tbody id="bikeTableBody"></tbody>
       </table>
-
-      
     </div>
+
+    <h2>Simulation</h2>
+    <div class="scrollable">
+      <table>
+        <thead>
+          <tr>
+            <th>Action</th>
+            <th>User</th>
+            <th>Bike ID</th>
+            <th>Station</th>
+          </tr>
+        </thead>
+        <tbody id="simulationTableBody"></tbody>
+      </table>
+    </div>
+
+
+
+    <script>
+      const simulationForm = document.getElementById("simulationForm");
+
+      simulationForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        const inputId = document.getElementById("inputId").value;
+
+        if (!isNaN(inputId) && inputId > 0) {
+          const buttonName = event.submitter.name;
+
+          if (buttonName === "generateBikes") {
+            generateBikes(inputId);
+          } else if (buttonName === "simulate") {
+            simulate(inputId);
+          }
+        } else {
+          alert("Please enter a valid ID.");
+        }
+      });
+
+      function generateBikes(id) {
+        // Fetch and populate bike table with data for the given ID
+        fetch(`/generate-bikes/${id}`)
+          .then((response) => response.json())
+          .then((bikeData) => {
+            const bikeTableBody = document.getElementById("bikeTableBody");
+            bikeTableBody.innerHTML = ""; // Clear previous data
+
+            bikeData.forEach(({ id, state, borrow_time, latitude, longitude }) => {
+              const row = document.createElement("tr");
+              row.innerHTML = `
+                <td>${id}</td>
+                <td>${state}</td>
+                <td>${borrow_time}</td>
+                <td>${latitude}</td>
+                <td>${longitude}</td>
+              `;
+              bikeTableBody.appendChild(row);
+            });
+          })
+          .catch((error) => console.error("Error fetching bike data:", error));
+      }
+
+      function simulate(id) {
+        // Fetch and populate simulation table with data for the given ID
+        fetch(`/simulate/${id}`)
+          .then((response) => response.json())
+          .then((simulationData) => {
+            const simulationTableBody = document.getElementById("simulationTableBody");
+            simulationTableBody.innerHTML = ""; // Clear previous data
+
+            simulationData.forEach(({ action, user, bike_id, station }) => {
+              const row = document.createElement("tr");
+              row.innerHTML = `
+                <td>${action}</td>
+                <td>${user}</td>
+                <td>${bike_id || ""}</td>
+                <td>${station || ""}</td>
+              `;
+              simulationTableBody.appendChild(row);
+            });
+          })
+          .catch((error) => console.error("Error fetching simulation data:", error));
+      }
+    </script>
   </body>
 </html>

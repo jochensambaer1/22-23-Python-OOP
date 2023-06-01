@@ -1,5 +1,4 @@
-from ast import List
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, request, redirect, url_for, render_template
 import json
 import random
 import logging
@@ -9,19 +8,104 @@ from enum import Enum
 from datetime import datetime
 from typing import List
 import time
-
-
-
+import ast
+from dataclasses import dataclass, field
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
 app.config['JSON_SORT_KEYS'] = False
 logger = logging.getLogger(__name__)
+class Bike:
+    id: str
+    state: str
+    def __init__(self, id, state, borrow_time, latitude, longitude, location):
+        self.id = id
+        self.state = state
+        self.borrow_time = borrow_time
+        self.latitude = latitude
+        self.longitude = longitude
+        self.location = location
+        self.last_state_change = datetime.now()
+        self.current_station = None
+        
+    def move_to_station(self, station):
+        self.state = station
+        if self.current_station:
+            self.current_station.remove_bike(self)
+        self.current_station = station
+        station.add_bike(self)
+        print(f"Bike {self.id} has been moved to station {station.name}")
+        
+    def to_geojson(self):
+        return geojson.Feature(geometry=geojson.Point(self.location), properties={
+            'id': self.id,
+            'state': self.state.value,
+            'borrow_time': self.borrow_time
+        })
 
+class User:
+    user_id: str
+    full_name: str
+    borrowed_bike: Bike = None
+    def __init__(self, user_id, name, first_name, last_name, from_station, to_station, time_biking, total_time_biking_minutes, saldo, bike):
+        self.user_id = user_id
+        self.first_name = first_name
+        self.last_name = last_name
+        self.from_station = from_station
+        self.to_station = to_station
+        self.time_biking = time_biking
+        self.total_time_biking_minutes = total_time_biking_minutes
+        self.saldo = saldo
+        self.bike = bike
+        self.name = f"{self.first_name} {self.last_name}"
+        self.name = name
+        
+        
+        
+        
+        
+        
+
+    def borrow_bike(self, bike):
+            if self.borrowed_bike:
+                return "User has already borrowed a bike"
+            if bike.state != "available":
+                return "Bike is not available"
+            self.borrowed_bike = bike
+            bike.state = "unavailable"
+            return "Bike successfully borrowed"
+        
+    def return_bike(self):
+            if not self.borrowed_bike:
+                return "User doesn't have a borrowed bike"
+            bike = self.borrowed_bike
+            self.borrowed_bike = None
+            bike.state = "available"
+            return "Bike successfully returned"
+class Slot:
+    def __init__(self, slot_number):
+        self.slot_number = slot_number
+        self.state = "empty"
+        self.bike = None
+
+
+
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef):
+                function_names.append(node.name)
+
+        return function_names
+    def create_slots(self):
+        slots = []
+        for i in range(self.capacity):
+            slots.append(Slot(i))
+        return slots
 
 
 class Station:
-    def __init__(self, station_id, name, slots, feature):
+    station_id: str
+   
+    capacity: int
+    def __init__(self, station_id: str, name, slots: List[Slot], capacity: int, feature):
         properties = feature['properties']
         self.station_id = station_id
         self.object_type = properties['Objecttype']
@@ -35,115 +119,118 @@ class Station:
         self.object_code = properties['Objectcode']
         self.usage_status = properties['Gebruik']
         self.parking_spaces = properties['Aantal_plaatsen']
+        self.capacity = capacity
         self.name = name
         self.latitude, self.longitude = feature['geometry']['coordinates']
-        self.slots = self.create_slots()
+        self.slots = slots
+        self.slots: List[Slot] = self.create_slots()
+        self.bikes = []
 
     def create_slots(self):
-        """
-        Create the slots for this station.
-        """
-        logger.info(f"Creating {self.parking_spaces} slots")
-        return [Slot() for _ in range(self.parking_spaces)]
+        slots = []
+        for i in range(self.capacity):
+            slots.append(Slot(i))
+        return slots
 
 
-class Slot:
-    # A slot is a place in which a bike can be parked
-    def __init__(self, slot_id: str, bike: "Bike" = None):
-        # Initialize the slot object
-        self.id = slot_id
-        self.bike = bike
+    def add_bike(self, bike):
+        self.bikes.append(bike)
 
-class Bike:
-    def __init__(self, id, state, borrow_time, latitude, longitude, location):
-        self.id = id
-        self.state = state
-        self.borrow_time = borrow_time
-        self.latitude = latitude
-        self.longitude = longitude
-        self.location = location
-        self.last_state_change = datetime.now()
-    def to_geojson(self):
-        return geojson.Feature(geometry=geojson.Point(self.location), properties={
-            'id': self.id,
-            'state': self.state.value,
-            'borrow_time': self.borrow_time
-        })
-        return json.dumps(bike_feature)
+    def remove_bike(self, bike):
+        for slot in self.slots:
+            if slot.bike == bike:
+                self.bikes.remove(bike)
+                slot.bike = None
+                return
+    
 
-        
-class BikeState(Enum):
-    def __init__(self, state):
-        self.state = state
 
-    def to_dict(self):
-        return {"state": self.state}
+    def display_bikes(self):
+        bike_info = []
+        for i, slot in enumerate(self.slots):
+            if slot.state == "occupied":
+                bike_info.append(f"Slot {i+1}: {slot.bike.id}")
+            else:
+                bike_info.append(f"Slot {i+1}: Empty")
+        return bike_info
 
-class BikeState(Enum):
+
+
+
+
+class BikeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Bike):
+            return {
+                'id': obj.id,
+                'state': obj.state,
+                'borrow_time': obj.borrow_time,
+                'latitude': obj.latitude,
+                'longitude': obj.longitude,
+                'location': obj.location
+            }
+        return super().default(obj)
+
+
+class BikeState(str, Enum):
     AVAILABLE = 'available'
     BORROWED = 'borrowed'
     OVERDUE = 'overdue'
     MAINTENANCE = 'maintenance'
+
+
+
+def load_stations(filename):
+    stations = []
+    try:
+        with open(filename, 'r') as file:
+            for line in file:
+                station = line.strip()
+                stations.append(station)
+    except FileNotFoundError:
+        
+        print("Stations file not found.")
+    except Exception as e:
+       
+        print("An error occurred while loading stations:", str(e))
     
-class BikeEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, Bike):
-            return obj.__dict__
-        if isinstance(obj, BikeState):
-            return obj.value
-        if isinstance(obj, datetime):
-            return obj.isoformat()
-        return super().default(obj)
-
-class User:
-    def __init__(self, first_name, last_name, current_station, destination_station, time_biking=0, total_time_biking_minutes=0, saldo=0):
-        self.first_name = first_name
-        self.last_name = last_name
-        self.current_station = current_station
-        self.destination_station = destination_station
-        self.bike = None
-        self.time_biking = time_biking
-        self.total_time_biking_minutes = total_time_biking_minutes
-        self.saldo = saldo
-
-    def borrow_bike(self, bike):
-        self.bike = bike
-        self.current_station.remove_bike(bike)
-        bike.borrow(self)
-
-    def return_bike(self, station):
-        self.current_station = station
-        station.add_bike(self.bike)
-        self.bike.returned()
-        self.bike = None
-
-    def move_bike_to_nearest_station(self, stations):
-        nearest_station = self.find_nearest_station(stations)
-        self.bike.move_to_station(nearest_station)
-        self.current_station = nearest_station
-
-class Transporter:
-    def __init__(self, first_name, last_name, station1, station2):
-        self.first_name = first_name
-        self.last_name = last_name
-        self.station1 = station1
-        self.station2 = station2
+    return stations
 
 
-    def redistribute_bikes(self, stations):
-        for station in stations:
-            if station.is_full():
-                nearby_station = self.find_nearest_station(stations, station)
-                bikes_to_transfer = station.get_bikes_to_transfer()
-                for bike in bikes_to_transfer:
-                    station.remove_bike(bike)
-                    nearby_station.add_bike(bike)
-            elif station.is_empty():
-                nearby_station = self.find_nearest_station(stations, station)
-                bikes_to_transfer = nearby_station.get_bikes_to_transfer()
-                for bike in bikes_to_transfer:
-                    nearby_station.remove_bike(bike)
-                    station.add_bike(bike)
+def get_user(user_id):
+   
+    users = {
+        1: {'name': 'John Doe', 'age': 30},
+        2: {'name': 'Jane Smith', 'age': 25},
+        3: {'name': 'Bob Johnson', 'age': 35}
+    }
+    
+    if user_id in users:
+        return users[user_id]
+    else:
+        return None
+def get_station(station_id):
+   
+    stations = {
+        1: {'name': 'Station A', 'location': 'City X'},
+        2: {'name': 'Station B', 'location': 'City Y'},
+        3: {'name': 'Station C', 'location': 'City Z'}
+    }
+    
+    if station_id in stations:
+        return stations[station_id]
+    else:
+        return None      
+
+class Transporter(User):
+    id = 0
+    state = "available"
+
+    def __init__(self, first_name, last_name):
+        super().__init__(Transporter.id, first_name, last_name, f"{first_name} {last_name}", 0, 0, 0)
+        self.bikes = []
+        self.id = Transporter.id
+        Transporter.id += 1
 
     def collect_bikes(self, station):
         for i in range(station.capacity):
@@ -159,97 +246,86 @@ class Transporter:
                 i -= 1
 
 
+    def generate_random_users(self):
+       
+        users = []
+        for i in range(10):
+            user_id = f"User_{i+1}"
+            full_name = f"User {i+1}"
+            users.append(User(user_id, full_name))
+        return users
 
+    def generate_random_bikes(self):
+        
+        bikes = []
+        for i in range(50):
+            bike_id = f"Bike_{i+1}"
+            state = "available"
+            bikes.append(Bike(bike_id, state))
+        return bikes
 class BikeShareSystem:
-    def __init__(self, geojson_data):
-        self.stations = self.load_stations(geojson_data)
+    def __init__(self):
+        self.stations = []
+        self.users = []
 
-    def load_stations(self, geojson_data):
-        features = geojson_data["features"]
-        stations = []
-        for feature in features:
-            properties = feature["properties"]
-            name = properties["Naam"]
-            coordinates = feature["geometry"]["coordinates"]
-            station = {"name": name, "coordinates": coordinates}
-            stations.append(station)
-        return stations
+    def add_station(self, station):
+        self.stations.append(station)
 
+    def add_user(self, user):
+        self.users.append(user)
 
+    def display_stations(self):
+        for station in self.stations:
+            print(station)
 
-def generate_random_users(num_users):
-    users = []
-    for i in range(num_users):
-        first_name = f"User {i+1}"
-        last_name = f"Last Name {i+1}"
-        full_name = f"{first_name} {last_name}"
-        time_biking = 0
-        total_time_biking_minutes = 0
-        saldo = 0
+    def display_users(self):
+        print("List of Users:")
+        for user in self.users:
+            print(user)
 
-        user = User(i+1, first_name, last_name, full_name, time_biking, total_time_biking_minutes, saldo)
-        users.append(user)
-
-    return users
-
-    return users
-
-
-def generate_random_bikes(num_bikes):
-    # Generate a list of random bikes
-    bikes = [Bike(f"Bike {i+1}", random.choice(["Available", "Unavailable"]), 0, 0, 0) for i in range(num_bikes)]
-    logger.info(f"Generated {len(bikes)} random bikes")
-    return bikes
-
-
-
-@app.route('/')
-def index():
-    return render_template('index.html')
-@app.route('/sim')
-def sim():
-    return render_template('sim.html')
 
 @app.route('/submit', methods=['POST'])
 def submit():
     try:
         input_int = int(request.form['input_text'])
         if 'generet users' in request.form:
-            num_names = int(request.args.get('num_names', input_int))  # Default to 10 names if not specified
+                    
+            num_names = int(request.args.get('num_names', input_int))  
 
             with open('data/names.json', 'r', encoding='utf-8') as f:
                 names_data = json.load(f)
 
-            # Assuming names_data is a list of dictionaries, you can extract the first and last names
+
+          
             first_names = names_data['first_name']
             last_names = names_data['last_name']
 
-            # Create a list of dictionaries to store the generated names
+            
             name_list = []
 
-            # Generate the specified number of names and add them to the list
+            
             for k in range(num_names):
-                # Select two random names from the first_names and last_names lists
+                
                 first_name = random.choice(first_names)
                 last_name = random.choice(last_names)
 
-                # Combine the names to create a new name
+                
                 full_name = f"{first_name} {last_name}"
 
-                # Create a unique ID for each person
+                
                 person_id = k + 1
 
-                # Generate random values for time biking in minutes and hours
+                
                 time_biking_minutes = random.randint(0, 59)
                 time_biking_hours = random.randint(0, 10)
 
-                # Calculate the total time biking in minutes
+                
                 total_time_biking_minutes = time_biking_minutes + (time_biking_hours * 60)
 
-                # Generate a random saldo (account balance) with a maximum of 2 decimal places
+                
                 saldo = round(random.uniform(0, 1000), 2)
 
-                # Create an empty bike object
+                
                 bike = {}
 
                 # Add the new name to the list as a dictionary with additional fields
@@ -267,21 +343,19 @@ def submit():
 
                 # Add the new person to the name_list
                 name_list.append(name_dict)
-
-            # Store the list of names in memory
-            session['name_list'] = name_list
             with open('static/name.geojson', 'w') as f:        
-                            # Write the list of names to a JSON file
-                            with open('static/name.geojson', 'w') as f:
-                                json.dump(name_list, f)
-                        
-            return redirect(url_for('index'))
-
+                # Write the list of names to a JSON file
+                with open('static/name.geojson', 'w') as f:
+                    json.dump(name_list, f)
+            return redirect(url_for('index'))  
+            
         elif 'generat transporters' in request.form:
+                    
             num_names = int(request.args.get('num_names', input_int))  # Default to 10 names if not specified
 
             with open('data/names.json', 'r', encoding='utf-8') as f:
                 names_data = json.load(f)
+
 
             # Assuming names_data is a list of dictionaries, you can extract the first and last names
             first_names = names_data['first_name']
@@ -328,109 +402,129 @@ def submit():
 
                 # Add the new person to the name_list
                 name_list.append(name_dict)
-                name_list.append(name_dict)
             with open('static/Transporters.geojson', 'w') as f:        
             # Write the list of names to a JSON file
                 with open('static/Transporters.geojson', 'w') as f:
                     json.dump(name_list, f)
-            # Store the list of names in memory
-            session['name_list'] = name_list
-
-            return redirect(url_for('index'))
-
+            return redirect(url_for('index'))  
+        
         elif 'generat bikes' in request.form:
+                        
             # Create a list of bikes
             bike_list = []
             for i in range(input_int):
-                bike_id = i+1
+                id = i+1
                 bike_state = BikeState.AVAILABLE
                 bike_location = (random.uniform(-90, 90), random.uniform(-180, 180))
                 bike_borrow_time = 0
-                bike = Bike(id=bike_id, state=bike_state, borrow_time=0, latitude=0.0, longitude=0.0, location=bike_location)
+                bike = Bike(id=id, state=bike_state, borrow_time=0, latitude=0.0, longitude=0.0, location=bike_location)
+                bike_json = json.dumps(bike, cls=BikeEncoder)
                 bike_list.append(bike)
+                
 
-            # Convert bikes to geojson
+            # Convert bikes to geojson and save to file
             features = []
             for bike in bike_list:
                 feature = bike.to_geojson()
                 features.append(feature)
 
             feature_collection = geojson.FeatureCollection(features)
-
-            # Store the feature collection in memory
-            session['bike_collection'] = feature_collection
-                   # Add the new person to the name_list
-            feature_collection = geojson.FeatureCollection(features)
             with open('static/bikes.geojson', 'w') as k:
                 with open('static/bikes.geojson', 'w') as k:
                     geojson.dump(feature_collection, k)
 
-            return redirect(url_for('index'))
-
+            return redirect(url_for('index'))  
+        
         elif 'simulet' in request.form:
-             # Load stations from velo_geojson_data
-            stations = velo_geojson_data['features']
-            num_stations = len(stations)
+            
+            with open("static/bikes.geojson", 'r') as file2:
+                bike_geojson_data = json.load(file2)
+                bike_count = len(bike_geojson_data['features'])
+                print(f"Number of bikes: {bike_count}")
+            
+            with open("static/name.geojson", 'r') as file3:
+                user_geojson_data = json.load(file3)
+                user_count = len(user_geojson_data)
+                
+                stations = load_stations('velo.geojson')
+                print(f"Number of stations: {len(stations)}")
 
-            # Create a list of User/Transporter objects
-            users = [User('John', 'Doe', random.choice(stations), random.choice(stations)) for _ in range(input_int)]
-            transporters = [Transporter('John', 'Doe', random.choice(stations), random.choice(stations)) for _ in range(input_int)]
+                user_id = request.args.get('user_id')
+                station_id = request.args.get('station_id')
+                
+                selected_user = get_user(user_id)
+                selected_station = get_station(station_id)
+                
+                # add debugging code
+                print(type(selected_user))
+                print(selected_user)
+                print(type(selected_user['bike']))
+                print(selected_user['bike'])
+                print(type(selected_station))
+                print(selected_station)
+                if selected_user is None:
+                 print("Selected user is not found.")
+                 # Perform the appropriate action for handling the case when selected_user is None
+                else:
+                    if 'bike' in selected_user:
+                        # Access the 'bike' property on the selected_user object
+                        print(type(selected_user['bike']))
+                        if selected_user and selected_station:
+                            if selected_user['bike'] is not None:
+                                selected_station['bikes'].append(selected_user['bike'])
+                                selected_user.return_bike()
 
+                                # update code to handle different data types
+                                id = selected_user.bike.id if isinstance(selected_user.bike, Bike) else selected_user['bike']
+                                print(f"{selected_user.name} is returning bike {id} to station {selected_station['name']}")
 
-            # Initialize simulation
-            simulation_steps = input_int
-
-            simulation_data = []
-
-            for step in range(simulation_steps):
-                # Simulate bike borrowing/returning by users
-                for user in users:
-                    if user.bike is None:
-                        available_bikes = user.current_station.get_bikes()
-                        if available_bikes:
-                            bike = random.choice(available_bikes)
-                            user.borrow_bike(bike)
-                            simulation_data.append({
-                                "action": "rent",
-                                "user": user.full_name,
-                                "bike_id": bike.id,
-                                "station": user.current_station.name
-                            })
-
-                    elif user.current_station == user.destination_station:
-                        user.return_bike(user.current_station)
-                        simulation_data.append({
-                            "action": "return",
-                            "user": user.full_name,
-                            "bike_id": user.bike.id,
-                            "station": user.current_station.name
-                        })
-
+                                return render_template('submit.html', user=selected_user, station=selected_station)
+                            else:
+                                return render_template('error.html', message='User has no bike.')
+                        else:
+                            return render_template('error.html', message='Invalid user or station.')
                     else:
-                        user.move_bike_to_nearest_station(stations)
+                        print("Selected user has no 'bike' property.")
+                        # Perform the appropriate action for handling the case when selected_user does not have the 'bike' property
 
-                # Simulate bike redistribution by transporter
-                transporters.redistribute_bikes(stations)
 
-            # Store the simulation data in memory
-            session['simulation_data'] = simulation_data
+                with open("simulation.json", "w") as f:
+                    json.dump(simulation_data, f)
 
-            # Write the stations to a JSON file using the StationEncoder
-            with open("stations.json", "w") as f:
-                json.dump(stations, f, cls=StationEncoder)
+            
 
-                    
-                        
-
-            return redirect(url_for('sim'))
+          
+        
+            return redirect(url_for('sim'))  
         else:
             return 'Unknown button clicked!'
-
     except ValueError:
         return 'Invalid input: not a number!'
 
-   
+    
+@app.route('/')
+def index():
+    # Example data
+    username = 'John Doe'
+    age = 30
+    interests = ['Programming', 'Reading', 'Sports']
 
+    # Passing data to the template
+    return render_template('index.html', username=username, age=age, interests=interests)
+
+@app.route('/sim')
+def sim():
+    return render_template('sim.html')
+
+@app.route('/user/<int:user_id>')
+def user_profile(user_id):
+    user = get_user(user_id)
+    return render_template('user.html', user=user)
+
+@app.route('/station/<int:station_id>')
+def station_details(station_id):
+    station = get_station(station_id)
+    return render_template('station.html', station=station)
 
 
 if __name__ == "__main__":
@@ -460,11 +554,8 @@ if __name__ == "__main__":
     with open("static/simulation.geojson", 'r') as file5:
         simulation_geojson_data = json.load(file5)
         logger.debug("simulation.geojson ingelezen en opgeslagen in het geheugen")
-  
+
     logger.info("Starting the Flask application")
     app.run(debug=True)
 
     logger.info("Exiting the application")
-
-
-

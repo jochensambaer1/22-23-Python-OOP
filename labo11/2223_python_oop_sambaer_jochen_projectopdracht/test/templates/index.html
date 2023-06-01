@@ -1,135 +1,279 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Bike Stations</title>
-    
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
-  </head>
-  <body>
-    <li><a href="/sim">sim</a></li>
-    <h1>Bike Stations</h1>
+<head>
+  <title>Data Fetching Example</title>
+  <style>
+    .scrollable {
+      max-height: 200px;
+      overflow-y: scroll;
+    }
+  </style>
+</head>
+<body>
+  <li><a href="/sim">sim</a></li>
+  <h1>Bike Data</h1>
 
-    <form action="/submit" method="post">
-      <input type="number" name="input_text" />
-      <button type="submit" name="generet users">generet users</button>
-      <button type="submit" name="generat bikes">generat bikes Button</button>
-      <button type="submit" name="generat transporters">generat transporters Button</button>
-    </form>
+  <form action="/submit" method="post">
+    <input type="number" name="input_text" />
+    <button type="submit" name="generateUsers">Generate Users</button>
+    <button type="submit" name="generateBikes">Generate Bikes</button>
+    <button type="submit" name="generateTransporters">Generate Transporters</button>
+  </form>
+  <form action="/submit" method="post">
+    <input type="number" name="input_text" />
+    <button type="submit" name="simulet">simulet</button>
+  </form>
+  <h2>Search by ID</h2>
+  <form id="nameForm">
+    <label for="inputId">Enter ID:</label>
+    <input type="text" id="inputId">
+    <button type="submit">Search</button>
+  </form>
 
-    <h2>All Stations</h2>
-    <style>
-      .scrollable {
-        height: 200px;
-        overflow-y: scroll;
+  <h2>Bike Table</h2>
+  <div class="scrollable">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>State</th>
+          <th>Borrow Time</th>
+          <th>Latitude</th>
+          <th>Longitude</th>
+          <th>Location</th>
+          <th>Last State Change</th>
+        </tr>
+      </thead>
+      <tbody id="bikeTableBody"></tbody>
+    </table>
+  </div>
+
+  <h2>Simulation Table</h2>
+  <div class="scrollable">
+    <table>
+      <thead>
+        <tr>
+          <th>Action</th>
+          <th>User</th>
+          <th>Bike ID</th>
+          <th>Station</th>
+        </tr>
+      </thead>
+      <tbody id="simulationTableBody"></tbody>
+    </table>
+  </div>
+
+  <h2>Station Table</h2>
+  <div class="scrollable">
+    <table>
+      <thead>
+        <tr>
+          <th>Object ID</th>
+          <th>Object Type</th>
+          <th>Type Velo</th>
+          <th>Ligging</th>
+          <th>Straatnaam</th>
+          <th>Huisnummer</th>
+          <th>Aanvulling</th>
+          <th>District</th>
+          <th>Postcode</th>
+          <th>Object Code</th>
+          <th>Gebruik</th>
+          <th>Aantal Plaatsen</th>
+          <th>Naam</th>
+          <th>Latitude</th>
+          <th>Longitude</th>
+        </tr>
+      </thead>
+      <tbody id="stationTableBody"></tbody>
+    </table>
+  </div>
+
+  <h2>User Table</h2>
+  <div class="scrollable">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>Full Name</th>
+          <th>Time Biking Minutes</th>
+          <th>Time Biking Hours</th>
+          <th>Total Time Biking Minutes</th>
+          <th>Saldo</th>
+        </tr>
+      </thead>
+      <tbody id="userTableBody"></tbody>
+    </table>
+  </div>
+
+  <h2>Bike Transporter Table</h2>
+  <div class="scrollable">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>Full Name</th>
+          <th>Time Biking Minutes</th>
+          <th>Time Biking Hours</th>
+          <th>Total Time Biking Minutes</th>
+          <th>Saldo</th>
+        </tr>
+      </thead>
+      <tbody id="transporterTableBody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const nameForm = document.getElementById("nameForm");
+
+    nameForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const inputId = document.getElementById("inputId").value;
+
+      if (!isNaN(inputId) && inputId > 0) {
+        window.location.href = `/station/${inputId}`;
+      } else {
+        alert("Please enter a valid ID.");
       }
-    </style>
+    });
 
-    <div class="scrollable">
-      <table>
-        <thead>
-          <tr>
-            <th><a href="?sort=id">ID</a></th>
-            <th><a href="?sort=object_type">Object Type</a></th>
-            <th><a href="?sort=velo_type">Velo Type</a></th>
-            <th><a href="?sort=location">Location</a></th>
-            <th><a href="?sort=street_name">Street Name</a></th>
-            <th><a href="?sort=house_number">House Number</a></th>
-            <th><a href="?sort=additional_info">Additional Info</a></th>
-            <th><a href="?sort=district">District</a></th>
-            <th><a href="?sort=postal_code">Postal Code</a></th>
-            <th><a href="?sort=object_code">Object Code</a></th>
-            <th><a href="?sort=usage_status">Usage Status</a></th>
-            <th><a href="?sort=parking_spaces">Parking Spaces</a></th>
-            <th><a href="?sort=name">Name</a></th>
-            <th><a href="?sort=latitude">Latitude</a></th>
-            <th><a href="?sort=longitude">Longitude</a></th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-        <tbody id="stationTableBody"></tbody>
-      </table>
-     
-    </div>
+    fetch("/static/bikes.geojson")
+      .then((response) => response.json())
+      .then((bikeData) => {
+        const bikeTableBody = document.getElementById("bikeTableBody");
+        bikeData.features.forEach(({ properties, geometry }) => {
+          const { id, state, borrow_time } = properties;
+          const latitude = geometry.coordinates[1];
+          const longitude = geometry.coordinates[0];
+          const location = ""; // Update this with the actual location if available
+          const last_state_change = new Date().toISOString();
 
-    
-    <h2>Slot</h2>
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${id}</td>
+            <td>${state}</td>
+            <td>${borrow_time}</td>
+            <td>${latitude}</td>
+            <td>${longitude}</td>
+            <td>${location}</td>
+            <td>${last_state_change}</td>
+          `;
+          bikeTableBody.appendChild(row);
+        });
+      })
+      .catch((error) => console.error("Error fetching bike data:", error));
+
+    fetch("/static/simulation.geojson")
+      .then((response) => response.json())
+      .then((simulationData) => {
+        const simulationTableBody = document.getElementById("simulationTableBody");
+        simulationData.forEach(({ action, user, bike_id, station }) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${action}</td>
+            <td>${user}</td>
+            <td>${bike_id || ""}</td>
+            <td>${station || ""}</td>
+          `;
+          simulationTableBody.appendChild(row);
+        });
+      })
+      .catch((error) => console.error("Error fetching simulation data:", error));
+
+    fetch("/static/velo.geojson")
+      .then((response) => response.json())
+      .then((stationData) => {
+        const stationTableBody = document.getElementById("stationTableBody");
+        stationData.features.forEach(({ properties, geometry }) => {
+          const {
+            OBJECTID,
+            Objecttype,
+            Type_velo,
+            Ligging,
+            Straatnaam,
+            Huisnummer,
+            Aanvulling,
+            District,
+            Postcode,
+            Objectcode,
+            Gebruik,
+            Aantal_plaatsen,
+            Naam,
+          } = properties;
+          const latitude = geometry.coordinates[1];
+          const longitude = geometry.coordinates[0];
+
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${OBJECTID}</td>
+            <td>${Objecttype}</td>
+            <td>${Type_velo}</td>
+            <td>${Ligging}</td>
+            <td>${Straatnaam}</td>
+            <td>${Huisnummer}</td>
+            <td>${Aanvulling}</td>
+            <td>${District}</td>
+            <td>${Postcode}</td>
+            <td>${Objectcode}</td>
+            <td>${Gebruik}</td>
+            <td>${Aantal_plaatsen}</td>
+            <td>${Naam}</td>
+            <td>${latitude}</td>
+            <td>${longitude}</td>
+          `;
+          stationTableBody.appendChild(row);
+        });
+      })
+      .catch((error) => console.error("Error fetching station data:", error));
+
+    fetch("/static/name.geojson")
+      .then((response) => response.json())
+      .then((userData) => {
+        const userTableBody = document.getElementById("userTableBody");
+        userData.forEach(({ id, first_name, last_name, full_name, time_biking_minutes, time_biking_hours, total_time_biking_minutes, saldo }) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${id}</td>
+            <td>${first_name}</td>
+            <td>${last_name}</td>
+            <td>${full_name}</td>
+            <td>${time_biking_minutes}</td>
+            <td>${time_biking_hours}</td>
+            <td>${total_time_biking_minutes}</td>
+            <td>${saldo}</td>
+          `;
+          userTableBody.appendChild(row);
+        });
+      })
+      .catch((error) => console.error("Error fetching user data:", error));
+
+    fetch("/static/Transporters.geojson")
+      .then((response) => response.json())
+      .then((transporterData) => {
+        const transporterTableBody = document.getElementById("transporterTableBody");
+        transporterData.forEach(({ id, first_name, last_name, full_name, time_biking_minutes, time_biking_hours, total_time_biking_minutes, saldo }) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${id}</td>
+            <td>${first_name}</td>
+            <td>${last_name}</td>
+            <td>${full_name}</td>
+            <td>${time_biking_minutes}</td>
+            <td>${time_biking_hours}</td>
+            <td>${total_time_biking_minutes}</td>
+            <td>${saldo}</td>
+          `;
+          transporterTableBody.appendChild(row);
+        });
+      })
+      .catch((error) => console.error("Error fetching transporter data:", error));
+
    
-
-    <ul id="nameList"></ul>
-
-
-    <h2>User</h2>
-    <div class="scrollable">
-      <table id="usersTable">
-        <thead>
-          <tr>
-            <th><a href="?sort=id">ID</a></th>
-            <th><a href="?sort=first_name">First Name</a></th>
-            <th><a href="?sort=last_name">Last Name</a></th>
-            <th><a href="?sort=full_name">Full Name</a></th>
-            <th>
-              <a href="?sort=time_biking_minutes">Time Biking (Minutes)</a>
-            </th>
-            <th><a href="?sort=time_biking_hours">Time Biking (Hours)</a></th>
-            <th>
-              <a href="?sort=total_time_biking_minutes"
-                >Total Time Biking (Minutes)</a
-              >
-            </th>
-            <th><a href="?sort=saldo">Saldo</a></th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-        <tbody id="userTableBody"></tbody>
-      </table>
-      <!-- Your content goes here -->
-    </div>
-
-    <!-- Bike Class -->
-    <h2>Bike</h2>
-    <div class="scrollable">
-      <table id="bikeTable">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>State</th>
-            <th>Borrow Time</th>
-            <th>Latitude</th>
-            <th>Longitude</th>
-          </tr>
-        </thead>
-        <tbody id="bikeTableBody"></tbody>
-      </table>
-    
-      <!-- Your content goes here -->
-    </div>
-    
-
-    <!-- BikeTransporter Class -->
-    <h2>BikeTransporter</h2>
-    <div class="scrollable">
-      <table>
-        <thead>
-          <tr>
-            <th><a href="?sort=id">ID</a></th>
-            <th><a href="?sort=first_name">First Name</a></th>
-            <th><a href="?sort=last_name">Last Name</a></th>
-            <th><a href="?sort=full_name">Full Name</a></th>
-            <th>
-              <a href="?sort=time_biking_minutes">Time Biking (Minutes)</a>
-            </th>
-            <th><a href="?sort=time_biking_hours">Time Biking (Hours)</a></th>
-            <th>
-              <a href="?sort=total_time_biking_minutes"
-                >Total Time Biking (Minutes)</a
-              >
-            </th>
-            <th><a href="?sort=saldo">Saldo</a></th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-        <tbody id="BikeTransporterTableBody"></tbody>
-      </table>
-    </div>
-  </body>
+  </script>
+</body>
 </html>
