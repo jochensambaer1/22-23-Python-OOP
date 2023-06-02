@@ -4,9 +4,15 @@ from typing import List, Dict, Any, Tuple, Optional
 from datetime import datetime
 import chardet
 import geojson
-from typing import NamedTuple
+from enum import Enum
+import time
 
 
+class BikeState(Enum):
+    AVAILABLE = 0
+    BORROWED = 1
+    OVERDUE = 2
+    MAINTENANCE = 3
 
 class CustomEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -17,16 +23,17 @@ class CustomEncoder(json.JSONEncoder):
         else:
             return super().default(obj)
 
+class Station:
+    def __init__(self, station_id: int, name: str, longitude: float, latitude: float, number_of_places: int):
+        self.station_id = station_id
+        self.name = name
+        self.longitude = longitude
+        self.latitude = latitude
+        self.number_of_places = number_of_places
+        self.bikes = []  # Initialize the bikes attribute as an empty list
 
-class Station(NamedTuple):
-    station_id: int
-    name: str
-    longitude: float
-    latitude: float
-    number_of_places: int
-
-    def __repr__(self):
-        return f"Station(station_id={self.station_id}, name={self.name}, longitude={self.longitude}, latitude={self.latitude}, number_of_places={self.number_of_places})"
+    def __str__(self):
+        return f"Station {self.station_id}: {self.name}"
 
 
 class User:
@@ -61,53 +68,66 @@ class User:
         return False
 
 
-def generate_names(num_names: int) -> List[Dict[str, str]]:
-    """
-    Generate a list of random names.
+    def generate_names(num_names: int) -> List[Dict[str, str]]:
+        """
+        Generate a list of random names.
 
-    Args:
-        num_names: The number of names to generate.
+        Args:
+            num_names: The number of names to generate.
 
-    Returns:
-        A list of dictionaries containing the generated names.
-    """
-    # Load names from names.json file
-    with open('names.json', 'rb') as f:
-        result = chardet.detect(f.read())
+        Returns:
+            A list of dictionaries containing the generated names.
+        """
+        # Load names from names.json file
+        with open('names.json', 'rb') as f:
+            result = chardet.detect(f.read())
 
-    # Open the JSON file with the detected character encoding
-    with open('names.json', 'r', encoding=result['encoding']) as f:
-        names = json.load(f)
+        # Open the JSON file with the detected character encoding
+        with open('names.json', 'r', encoding=result['encoding']) as f:
+            names = json.load(f)
 
-    # Generate names and add them to the list
-    name_list = [{'first_name': random.choice(names['first_names']),
-                  'last_name': random.choice(names['last_names']),
-                  'full_name': f"{first_name} {last_name}"}
-                 for _ in range(num_names)]
+        # Generate names and add them to the list
+        name_list = [{'first_name': random.choice(names['first_names']),
+                    'last_name': random.choice(names['last_names']),
+                    'full_name': f"{first_name} {last_name}"}
+                    for _ in range(num_names)]
 
-    # Create a FeatureCollection with the names
-    feature_collection = geojson.FeatureCollection(name_list)
+        # Create a FeatureCollection with the names
+        feature_collection = geojson.FeatureCollection(name_list)
 
-    # Write the FeatureCollection to a GeoJSON file using the CustomEncoder
-    with open("names.geojson", "w") as f:
-        json.dump(feature_collection, f, cls=CustomEncoder)
+        # Write the FeatureCollection to a GeoJSON file using the CustomEncoder
+        with open("names.geojson", "w") as f:
+            json.dump(feature_collection, f, cls=CustomEncoder)
 
-    return name_list
+        return name_list
 class Bike:
-    def __init__(self, id, state, location):
-        self.id = id
+    def __init__(self, bike_id, state, location):
+        self.bike_id = bike_id
         self.state = state
         self.location = location
         self.borrow_time = None
+    def move_to_station(self, station):
+        if self.state == BikeState.BORROWED:
+            raise Exception("Cannot move a borrowed bike to a station.")
+
+        if self.state == BikeState.AVAILABLE:
+            self.location = station
+            if station is not None:
+                self.state = BikeState.AVAILABLE
+            else:
+                self.state = BikeState.UNAVAILABLE
 
     def borrow(self, user):
+        print(f"Bike state: {self.state}")
         if self.state == BikeState.AVAILABLE:
             self.state = BikeState.BORROWED
             self.user = user
-            self.borrow_time = time.time()
+            self.borrow_time = datetime.now()
             return True
         else:
+            print(f"Bike is not available for borrowing. State: {self.state}")
             raise Exception("Bike is not available for borrowing")
+
 
     def return_to_station(self, station):
         if self.state == BikeState.BORROWED and station.add_bike(self):
@@ -183,21 +203,27 @@ def load_stations(filename: str) -> List[Station]:
     """
     with open(filename) as f:
         data = geojson.load(f)
-    
+
     print(f"Found {len(data['features'])} features in GeoJSON file")
 
     stations = []
     for feature in data['features']:
         properties = feature['properties']
         station_id = properties.get('station_id')
-        bikes = [Bike(i) for i in range(100)]
         name = properties.get('name', f"Station {station_id}")
         number_of_places = properties.get('number_of_places', 0)
         longitude, latitude = feature['geometry']['coordinates']
-        stations.append(Station(station_id, name, longitude, latitude, number_of_places))
+        station = Station(station_id, name, longitude, latitude, number_of_places)
+
+        # Create a list of Bike objects for the station
+        bikes = [Bike(i, state=BikeState.AVAILABLE, location=None) for i in range(100)]
+        station.bikes = bikes
+
+        stations.append(station)
 
     print(f"Loaded {len(stations)} stations")
     return stations
+
 
 
 # Load stations from stations.geojson file
@@ -206,14 +232,22 @@ print(f"Number of stations: {len(stations)}")
 
 # Create a list of User objects
 users = [User(f"User {i}", "Doe", random.choice(stations), random.choice(stations)) for i in range(1000)]
+user = User("John", "Doe", "Station A", "Station B")
+bike = Bike(1, BikeState.AVAILABLE, "Station A")
 
+user.borrow_bike(bike)
+user.return_bike(bike)
+
+
+user.move_bike_to_station(None)
 # Create a list of Bike objects
-bikes = [Bike(i) for i in range(100)]
+
+bikes = [Bike(i, state=BikeState.AVAILABLE, location=None) for i in range(100)]
 # Create an empty list to store the simulation data
 simulation_data = []
 
 # Simulate bike rentals and returns
-for i in range(10000):
+for i in range(1000):
     user = random.choice(users)
     bike = random.choice(bikes)
     station = random.choice(stations)
